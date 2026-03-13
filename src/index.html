@@ -179,7 +179,16 @@
     const lastUpdated = document.getElementById('last-updated');
     
     async function loadContainers() {
-      containers = await ipcRenderer.invoke('get-containers');
+      try {
+        console.log('Loading containers...');
+        containers = await ipcRenderer.invoke('get-containers');
+        console.log('Containers loaded:', containers);
+      } catch (err) {
+        console.error('Error loading containers:', err);
+        containerList.innerHTML = '<div class="empty-state">Error: ' + err.message + '</div>';
+        countEl.textContent = '?';
+        return;
+      }
       render();
     }
     
