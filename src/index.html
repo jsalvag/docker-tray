@@ -71,11 +71,11 @@
 
     .selection-toolbar {
       display: none;
-      padding: 12px 16px;
+      padding: 8px 16px;
       background: #252525;
       border-bottom: 1px solid #3d3d3d;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .selection-toolbar.visible {
@@ -90,26 +90,29 @@
     }
 
     .selection-toolbar button {
-      padding: 6px 12px;
+      padding: 4px 8px;
       border: none;
-      border-radius: 4px;
-      background: #3d3d3d;
-      color: #fff;
+      border-radius: 3px;
+      background: transparent;
+      color: #888;
       cursor: pointer;
-      font-size: 12px;
-      transition: background 0.15s;
+      font-size: 11px;
+      transition: all 0.15s;
+      border: 1px solid transparent;
     }
 
     .selection-toolbar button:hover {
-      background: #4d4d4d;
+      color: #0d9488;
+      border-color: #0d9488;
+      background: rgba(13, 148, 136, 0.1);
     }
 
     .selection-toolbar button.primary {
-      background: #0d9488;
+      color: #0d9488;
     }
 
     .selection-toolbar button.primary:hover {
-      background: #0c8878;
+      background: rgba(13, 148, 136, 0.2);
     }
 
     .container-list {
@@ -379,9 +382,9 @@
 
   <div class="selection-toolbar" id="selectionToolbar">
     <span class="selection-counter" id="selectionCounter"></span>
-    <button id="selectAllBtn">Seleccionar todos</button>
-    <button id="clearSelectionBtn">Limpiar selección</button>
-    <button id="hideSelectedBtn" class="primary">Ocultar seleccionados</button>
+    <button id="selectAllBtn">Todos</button>
+    <button id="clearSelectionBtn">Limpiar</button>
+    <button id="hideSelectedBtn" class="primary">Ocultar</button>
   </div>
 
   <div class="container-list" id="container-list">
