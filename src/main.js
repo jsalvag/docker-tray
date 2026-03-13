@@ -2,6 +2,7 @@ const { app, Tray, Menu, nativeImage, ipcMain, BrowserWindow, screen } = require
 const path = require('path');
 const fs = require('fs');
 const Docker = require('dockerode');
+const Store = require('electron-store');
 
 const logFile = path.join(app.getPath('userData'), 'docker-tray.log');
 
@@ -21,6 +22,7 @@ let tray = null;
 let docker = null;
 let containers = [];
 let mainWindow = null;
+const store = new Store({ name: 'docker-tray-config' });
 
 function getDocker() {
   if (!docker) {
@@ -243,4 +245,45 @@ ipcMain.handle('toggle-container', async (event, containerId) => {
     await toggleContainer(container);
   }
   return containers;
+});
+
+ipcMain.handle('get-hidden-containers', () => {
+  return store.get('hiddenContainers', []);
+});
+
+ipcMain.handle('add-to-hidden', (event, containerId) => {
+  const hidden = store.get('hiddenContainers', []);
+  if (!hidden.includes(containerId)) {
+    hidden.push(containerId);
+    store.set('hiddenContainers', hidden);
+    log('Container hidden:', containerId);
+  }
+  return hidden;
+});
+
+ipcMain.handle('remove-from-hidden', (event, containerId) => {
+  const hidden = store.get('hiddenContainers', []);
+  const index = hidden.indexOf(containerId);
+  if (index > -1) {
+    hidden.splice(index, 1);
+    store.set('hiddenContainers', hidden);
+    log('Container unhidden:', containerId);
+  }
+  return hidden;
+});
+
+ipcMain.handle('get-container-logs', async (event, containerId) => {
+  try {
+    const docker = getDocker();
+    const container = docker.getContainer(containerId);
+    const logs = await container.logs({
+      stdout: true,
+      stderr: true,
+      tail: 100
+    });
+    return logs.toString();
+  } catch (err) {
+    log('Error getting logs:', err.message);
+    return 'Error: ' + err.message;
+  }
 });
