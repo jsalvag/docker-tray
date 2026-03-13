@@ -1,0 +1,123 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Get last tag
+        id: last_tag
+        run: |
+          $tags = git tag --sort=-version:refname | Select-Object -First 1
+          if ($tags) {
+            echo "tag=$tags" >> $env:GITHUB_OUTPUT
+          } else {
+            echo "tag=v0.0.0" >> $env:GITHUB_OUTPUT
+          }
+        shell: pwsh
+
+      - name: Get commits since last tag
+        id: commits
+        run: |
+          $lastTag = "${{ steps.last_tag.outputs.tag }}"
+          $commits = git log "$lastTag..HEAD" --pretty=format:"%s"
+          echo "commits<<EOF" >> $env:GITHUB_OUTPUT
+          echo "$commits" >> $env:GITHUB_OUTPUT
+          echo "EOF" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+
+      - name: Determine version bump
+        id: version
+        run: |
+          $commits = "${{ steps.commits.outputs.commits }}"
+          $currentTag = "${{ steps.last_tag.outputs.tag }}" -replace "^v", ""
+          $parts = $currentTag -split "\."
+
+          $major = [int]$parts[0]
+          $minor = [int]$parts[1]
+          $patch = [int]$parts[2]
+
+          if ($commits -match "^breaking:") {
+            $major++
+            $minor = 0
+            $patch = 0
+          } elseif ($commits -match "^feat:") {
+            $minor++
+            $patch = 0
+          } elseif ($commits -match "^fix:") {
+            $patch++
+          } else {
+            Write-Host "No version bump needed (no feat:, fix:, or breaking: commits)"
+            exit 0
+          }
+
+          $newVersion = "$major.$minor.$patch"
+          echo "version=$newVersion" >> $env:GITHUB_OUTPUT
+          echo "new_tag=v$newVersion" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+
+      - name: Check if version bump needed
+        id: check_bump
+        run: |
+          if ("${{ steps.version.outputs.version }}" -eq "") {
+            echo "skip=true" >> $env:GITHUB_OUTPUT
+          } else {
+            echo "skip=false" >> $env:GITHUB_OUTPUT
+          }
+        shell: pwsh
+
+      - name: Install dependencies
+        if: steps.check_bump.outputs.skip == 'false'
+        run: npm ci
+
+      - name: Build executable
+        if: steps.check_bump.outputs.skip == 'false'
+        run: npm run build
+
+      - name: Create Git tag
+        if: steps.check_bump.outputs.skip == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "${{ steps.version.outputs.new_tag }}"
+          git push origin "${{ steps.version.outputs.new_tag }}"
+
+      - name: Create Release
+        if: steps.check_bump.outputs.skip == 'false'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.new_tag }}
+          name: Release ${{ steps.version.outputs.new_tag }}
+          body: |
+            ## What's New
+
+            ${{ steps.commits.outputs.commits }}
+
+            ## Installation
+
+            Download `DockerTray.exe` below and run it directly (no installation needed).
+
+            **Requirements**: Docker Desktop or Docker Engine must be running.
+
+          files: dist/DockerTray.exe
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
