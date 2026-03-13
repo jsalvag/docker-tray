@@ -169,8 +169,6 @@
   </div>
 
   <script>
-    const { ipcRenderer } = window.electronAPI;
-    
     let containers = [];
     const searchInput = document.getElementById('search');
     const containerList = document.getElementById('container-list');
@@ -181,7 +179,7 @@
     async function loadContainers() {
       try {
         console.log('Loading containers...');
-        containers = await ipcRenderer.invoke('get-containers');
+        containers = await window.electronAPI.getContainers();
         console.log('Containers loaded:', containers);
       } catch (err) {
         console.error('Error loading containers:', err);
@@ -227,7 +225,7 @@
       const item = e.target.closest('.container-item');
       if (item) {
         const id = item.dataset.id;
-        await ipcRenderer.invoke('toggle-container', id);
+        await window.electronAPI.toggleContainer(id);
         await loadContainers();
       }
     });
