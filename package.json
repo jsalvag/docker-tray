@@ -6,7 +6,8 @@
   "scripts": {
     "start": "electron .",
     "build": "electron-builder --win portable",
-    "build:dir": "electron-builder --win --dir"
+    "build:dir": "electron-builder --win --dir",
+    "clean": "node -e \"require('fs').rmSync(require('electron').app.getPath('userData'), { recursive: true, force: true }); console.log('Config cleared');\""
   },
   "author": "",
   "license": "MIT",
