@@ -37,7 +37,11 @@ jobs:
         id: commits
         run: |
           $lastTag = "${{ steps.last_tag.outputs.tag }}"
-          $commits = git log "$lastTag..HEAD" --pretty=format:"%s"
+          if ($lastTag -eq "v0.0.0") {
+            $commits = git log --pretty=format:"%s"
+          } else {
+            $commits = git log "$lastTag..HEAD" --pretty=format:"%s"
+          }
           echo "commits<<EOF" >> $env:GITHUB_OUTPUT
           echo "$commits" >> $env:GITHUB_OUTPUT
           echo "EOF" >> $env:GITHUB_OUTPUT
