@@ -68,23 +68,95 @@
     .search-box input::placeholder {
       color: #666;
     }
-    
+
+    .selection-toolbar {
+      display: none;
+      padding: 12px 16px;
+      background: #252525;
+      border-bottom: 1px solid #3d3d3d;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .selection-toolbar.visible {
+      display: flex;
+    }
+
+    .selection-counter {
+      font-size: 13px;
+      color: #0d9488;
+      font-weight: 500;
+      margin-right: auto;
+    }
+
+    .selection-toolbar button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      background: #3d3d3d;
+      color: #fff;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background 0.15s;
+    }
+
+    .selection-toolbar button:hover {
+      background: #4d4d4d;
+    }
+
+    .selection-toolbar button.primary {
+      background: #0d9488;
+    }
+
+    .selection-toolbar button.primary:hover {
+      background: #0c8878;
+    }
+
     .container-list {
       overflow-y: auto;
+      overflow-x: hidden;
       max-height: 350px;
+      width: 100%;
+      box-sizing: border-box;
     }
-    
+
     .container-item {
       padding: 10px 16px;
       border-bottom: 1px solid #2d2d2d;
       cursor: pointer;
       transition: background 0.15s;
+      width: 100%;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
     }
-    
+
     .container-item:hover {
       background: #2d2d2d;
     }
-    
+
+    .container-item.selected {
+      background: #1e5f74;
+      border-left: 3px solid #0d9488;
+      padding-left: 13px;
+    }
+
+    .container-content {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .container-info {
+      flex: 1;
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
     .container-name {
       font-size: 13px;
       font-weight: 500;
@@ -92,6 +164,17 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      min-width: 0;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .name-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      min-width: 0;
     }
     
     .status-dot {
@@ -116,6 +199,9 @@
       font-size: 11px;
       color: #888;
       overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -150,6 +236,10 @@
 
     .container-menu {
       position: relative;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      padding-left: 4px;
     }
 
     .menu-button {
@@ -160,7 +250,7 @@
       font-size: 18px;
       padding: 0 4px;
       line-height: 1;
-      margin-left: auto;
+      flex-shrink: 0;
     }
 
     .menu-button:hover {
@@ -286,7 +376,14 @@
   <div class="search-box">
     <input type="text" id="search" placeholder="Filter by name...">
   </div>
-  
+
+  <div class="selection-toolbar" id="selectionToolbar">
+    <span class="selection-counter" id="selectionCounter"></span>
+    <button id="selectAllBtn">Seleccionar todos</button>
+    <button id="clearSelectionBtn">Limpiar selección</button>
+    <button id="hideSelectedBtn" class="primary">Ocultar seleccionados</button>
+  </div>
+
   <div class="container-list" id="container-list">
     <div class="empty-state">Loading...</div>
   </div>
@@ -309,6 +406,7 @@
   <script>
     let containers = [];
     let hiddenContainers = [];
+    let selectedContainers = [];
     const searchInput = document.getElementById('search');
     const containerList = document.getElementById('container-list');
     const countEl = document.getElementById('count');
@@ -317,6 +415,11 @@
     const logsModal = document.getElementById('logsModal');
     const logsContent = document.getElementById('logsContent');
     const logsModalClose = document.getElementById('logsModalClose');
+    const selectionToolbar = document.getElementById('selectionToolbar');
+    const selectionCounter = document.getElementById('selectionCounter');
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+    const hideSelectedBtn = document.getElementById('hideSelectedBtn');
     
     async function loadContainers() {
       try {
@@ -350,11 +453,11 @@
         const statusText = c.status === 'running' ? '⏸ Stop' : '▶ Start';
         return `
           <div class="container-item" data-id="${c.id}">
-            <div style="display: flex; gap: 8px;">
-              <div style="flex: 1;">
+            <div class="container-content">
+              <div class="container-info">
                 <div class="container-name">
                   <span class="status-dot status-${c.status}"></span>
-                  ${c.name}
+                  <span class="name-text">${c.name}</span>
                 </div>
                 <div class="container-image">${c.image}</div>
               </div>
@@ -376,10 +479,59 @@
 
       lastUpdated.textContent = `Updated: ${new Date().toLocaleTimeString()}`;
       attachMenuListeners();
+      attachSelectionListeners();
+      updateSelectionUI();
     }
     
     async function loadHidden() {
       hiddenContainers = await window.electronAPI.getHiddenContainers();
+    }
+
+    function toggleSelection(containerId) {
+      const index = selectedContainers.indexOf(containerId);
+      if (index > -1) {
+        selectedContainers.splice(index, 1);
+      } else {
+        selectedContainers.push(containerId);
+      }
+      updateSelectionUI();
+    }
+
+    function updateSelectionUI() {
+      const visibleContainers = document.querySelectorAll('.container-item[data-id]');
+
+      // Update selected classes on items
+      visibleContainers.forEach(item => {
+        const id = item.dataset.id;
+        if (selectedContainers.includes(id)) {
+          item.classList.add('selected');
+        } else {
+          item.classList.remove('selected');
+        }
+      });
+
+      // Show/hide toolbar
+      if (selectedContainers.length > 0) {
+        selectionToolbar.classList.add('visible');
+        selectionCounter.textContent = `${selectedContainers.length} contenedor${selectedContainers.length !== 1 ? 'es' : ''} seleccionado${selectedContainers.length !== 1 ? 's' : ''}`;
+      } else {
+        selectionToolbar.classList.remove('visible');
+      }
+    }
+
+    function attachSelectionListeners() {
+      document.querySelectorAll('.container-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          // Don't toggle selection if clicking on menu button or dropdown
+          if (e.target.closest('.container-menu')) {
+            return;
+          }
+          const id = item.dataset.id;
+          if (id) {
+            toggleSelection(id);
+          }
+        });
+      });
     }
 
     function attachMenuListeners() {
@@ -434,6 +586,33 @@
     searchInput.addEventListener('input', render);
 
     refreshBtn.addEventListener('click', loadContainers);
+
+    selectAllBtn.addEventListener('click', () => {
+      const visibleContainers = document.querySelectorAll('.container-item[data-id]');
+      visibleContainers.forEach(item => {
+        const id = item.dataset.id;
+        if (!selectedContainers.includes(id)) {
+          selectedContainers.push(id);
+        }
+      });
+      updateSelectionUI();
+    });
+
+    clearSelectionBtn.addEventListener('click', () => {
+      selectedContainers = [];
+      updateSelectionUI();
+    });
+
+    hideSelectedBtn.addEventListener('click', async () => {
+      // Hide all selected containers
+      for (const id of selectedContainers) {
+        await window.electronAPI.addToHidden(id);
+      }
+      await loadHidden();
+      selectedContainers = [];
+      searchInput.value = '';
+      render();
+    });
 
     window.electronAPI.onContainersUpdated((newContainers) => {
       containers = newContainers;
