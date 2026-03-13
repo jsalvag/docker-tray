@@ -2,6 +2,7 @@ const { app, Tray, Menu, nativeImage, ipcMain, BrowserWindow, screen } = require
 const path = require('path');
 const fs = require('fs');
 const Docker = require('dockerode');
+const Store = require('electron-store');
 
 const logFile = path.join(app.getPath('userData'), 'docker-tray.log');
 
@@ -21,6 +22,7 @@ let tray = null;
 let docker = null;
 let containers = [];
 let mainWindow = null;
+const store = new Store({ name: 'docker-tray-config' });
 
 function getDocker() {
   if (!docker) {
@@ -70,10 +72,48 @@ async function getContainers() {
 }
 
 function createTrayIcon() {
-  const iconBase64 = `iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAA7AAAAOwBeShxvQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAKxSURBVFiF7ZdNaBNBGIbfmd1NNtlNYpqmrVpbW6u2ilZRUPEgHkQQvAheBBE8eBXxJF68eBIPIkQQvHnz4kUQPAgiIIKAIq2t1to0aWKaTZpkM+PuDAlZNptNcofCfzYzO+95n/d5z/sC/zcig8FgMBgMBoPB8N/AMC0Gg8FgMBgMBoPBYDAY/jei0SiapiHLMqlUinA4jNfr/er+yWSScDhMLBYjEAhQXFz8xZjRaJRQKEQkEsHv91NYWPjFmMlkklAoRDgcxu/3U1hY+MWYaDRKKBSiqKiIwsJCCgsLKRQKlEolSqUSpVKJUqlEqVSiVCpRKpUolUqUSiVKpRKlUolSqUSlUlEoFCgUChQKBUqlEqVSSaFQoFAoUCgUKBQKFAoFCoUChUKBQqFAoVCgUChQKBQoFAoUCgUKhQKFQoFCoUChUKBQKFAoFCgUChQKBQqFApVKRT6fJZfLkcvlyGazZLNZstks2WyWTCZDJpMhk8mQzWZJp9Ok02nS6TSpVIpUKkUymSSRSJBIJEgkEsTjceLxOLFYTGrx4x+p1+t1ut1u/X4/4XBYvwxJklxJkhxA2wHqANoAugB6ATYBdAP0APQC9AP0AwwADAMMA4wAjAKMAowBjAOMh+V3A3wA4AcEfwIQAPgBgB8Q/A0gCPABgD8A+AMgBVACJElSpFarpalUqlgqlSoWi8ViqVCoJBKJBJFIRBKJRIJIJCJFIpFIEIlEJBKJBJFIRBKJRBKJRCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCR+AP4A6xVgjqUAAAAASUVORK5CYII=`;
-  
+  const size = 16;
+  const buf = Buffer.alloc(size * size * 4, 0);
+
+  // Draw a simple Docker whale icon (blue #2496ED on transparent)
+  const B = [0x24, 0x96, 0xED, 0xFF]; // Docker blue
+  const W = [0xFF, 0xFF, 0xFF, 0xFF]; // White
+  const T = [0, 0, 0, 0];             // Transparent
+
+  // 16x16 pixel art: simplified whale with containers
+  const pixels = [
+    //0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15
+    [T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T], // 0
+    [T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T], // 1
+    [T, T, T, W, T, W, T, W, T, T, T, T, T, T, T, T], // 2
+    [T, T, W, W, W, W, W, W, W, T, T, T, T, T, T, T], // 3
+    [T, T, W, B, W, B, W, B, W, T, T, T, T, T, T, T], // 4
+    [T, T, W, W, W, W, W, W, W, T, T, T, T, T, T, T], // 5
+    [T, T, W, B, W, B, W, B, W, T, T, T, T, T, T, T], // 6
+    [T, B, W, W, W, W, W, W, W, W, B, B, B, T, T, T], // 7
+    [T, B, B, B, B, B, B, B, B, B, B, B, B, B, T, T], // 8
+    [T, T, B, B, B, B, B, B, B, B, B, B, B, T, T, T], // 9
+    [T, T, T, B, B, B, B, B, B, B, B, B, T, T, T, T], // 10
+    [T, T, T, T, B, B, B, B, B, B, B, T, T, T, T, T], // 11
+    [T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T], // 12
+    [T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T], // 13
+    [T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T], // 14
+    [T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T], // 15
+  ];
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const offset = (y * size + x) * 4;
+      const color = pixels[y][x];
+      buf[offset] = color[0];     // R
+      buf[offset + 1] = color[1]; // G
+      buf[offset + 2] = color[2]; // B
+      buf[offset + 3] = color[3]; // A
+    }
+  }
+
   try {
-    return nativeImage.createFromDataURL(`data:image/png;base64,${iconBase64}`);
+    return nativeImage.createFromBuffer(buf, { width: size, height: size });
   } catch {
     return nativeImage.createEmpty();
   }
@@ -205,4 +245,45 @@ ipcMain.handle('toggle-container', async (event, containerId) => {
     await toggleContainer(container);
   }
   return containers;
+});
+
+ipcMain.handle('get-hidden-containers', () => {
+  return store.get('hiddenContainers', []);
+});
+
+ipcMain.handle('add-to-hidden', (event, containerId) => {
+  const hidden = store.get('hiddenContainers', []);
+  if (!hidden.includes(containerId)) {
+    hidden.push(containerId);
+    store.set('hiddenContainers', hidden);
+    log('Container hidden:', containerId);
+  }
+  return hidden;
+});
+
+ipcMain.handle('remove-from-hidden', (event, containerId) => {
+  const hidden = store.get('hiddenContainers', []);
+  const index = hidden.indexOf(containerId);
+  if (index > -1) {
+    hidden.splice(index, 1);
+    store.set('hiddenContainers', hidden);
+    log('Container unhidden:', containerId);
+  }
+  return hidden;
+});
+
+ipcMain.handle('get-container-logs', async (event, containerId) => {
+  try {
+    const docker = getDocker();
+    const container = docker.getContainer(containerId);
+    const logs = await container.logs({
+      stdout: true,
+      stderr: true,
+      tail: 100
+    });
+    return logs.toString();
+  } catch (err) {
+    log('Error getting logs:', err.message);
+    return 'Error: ' + err.message;
+  }
 });

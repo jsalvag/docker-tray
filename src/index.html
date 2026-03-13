@@ -68,23 +68,129 @@
     .search-box input::placeholder {
       color: #666;
     }
-    
+
+    .selection-toolbar {
+      display: none;
+      padding: 8px 16px;
+      background: #252525;
+      border-bottom: 1px solid #3d3d3d;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .selection-toolbar.visible {
+      display: flex;
+    }
+
+    .selection-counter {
+      font-size: 11px;
+      color: #fff;
+      font-weight: 600;
+      margin-right: auto;
+      background: #0d9488;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+    }
+
+    .selection-toolbar button {
+      padding: 4px 8px;
+      border: none;
+      border-radius: 3px;
+      background: transparent;
+      color: #888;
+      cursor: pointer;
+      font-size: 11px;
+      transition: all 0.15s;
+      border: 1px solid transparent;
+    }
+
+    .selection-toolbar button:hover {
+      color: #0d9488;
+      border-color: #0d9488;
+      background: rgba(13, 148, 136, 0.1);
+    }
+
+    .selection-toolbar button.primary {
+      color: #0d9488;
+    }
+
+    .selection-toolbar button.primary:hover {
+      background: rgba(13, 148, 136, 0.2);
+    }
+
     .container-list {
       overflow-y: auto;
+      overflow-x: hidden;
       max-height: 350px;
+      width: 100%;
+      box-sizing: border-box;
     }
-    
+
+    .container-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .container-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .container-list::-webkit-scrollbar-thumb {
+      background: #444;
+      border-radius: 3px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .container-list:hover::-webkit-scrollbar-thumb {
+      opacity: 1;
+    }
+
+    .container-list::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
     .container-item {
       padding: 10px 16px;
       border-bottom: 1px solid #2d2d2d;
       cursor: pointer;
       transition: background 0.15s;
+      width: 100%;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
     }
-    
+
     .container-item:hover {
       background: #2d2d2d;
     }
-    
+
+    .container-item.selected {
+      background: #1e5f74;
+      border-left: 3px solid #0d9488;
+      padding-left: 13px;
+    }
+
+    .container-content {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .container-info {
+      flex: 1;
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
     .container-name {
       font-size: 13px;
       font-weight: 500;
@@ -92,6 +198,17 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      min-width: 0;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .name-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      min-width: 0;
     }
     
     .status-dot {
@@ -116,6 +233,9 @@
       font-size: 11px;
       color: #888;
       overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -147,6 +267,138 @@
     .footer button:hover {
       text-decoration: underline;
     }
+
+    .container-menu {
+      position: relative;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      padding-left: 4px;
+    }
+
+    .menu-button {
+      background: none;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 0 4px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .menu-button:hover {
+      color: #0d9488;
+    }
+
+    .menu-dropdown {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      background: #2d2d2d;
+      border: 1px solid #3d3d3d;
+      border-radius: 4px;
+      min-width: 140px;
+      z-index: 1000;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .menu-dropdown.active {
+      display: block;
+    }
+
+    .menu-item {
+      display: block;
+      width: 100%;
+      padding: 8px 12px;
+      border: none;
+      background: none;
+      color: #fff;
+      text-align: left;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background 0.1s;
+    }
+
+    .menu-item:hover {
+      background: #3d3d3d;
+    }
+
+    .menu-item:first-child {
+      border-radius: 3px 3px 0 0;
+    }
+
+    .menu-item:last-child {
+      border-radius: 0 0 3px 3px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #2d2d2d;
+      border-radius: 6px;
+      padding: 16px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 70vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #3d3d3d;
+      padding-bottom: 8px;
+    }
+
+    .modal-header h2 {
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: #fff;
+    }
+
+    .logs-content {
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      background: #1e1e1e;
+      padding: 8px;
+      border-radius: 4px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      color: #aaa;
+    }
   </style>
 </head>
 <body>
@@ -158,7 +410,14 @@
   <div class="search-box">
     <input type="text" id="search" placeholder="Filter by name...">
   </div>
-  
+
+  <div class="selection-toolbar" id="selectionToolbar">
+    <span class="selection-counter" id="selectionCounter"></span>
+    <button id="selectAllBtn">Todos</button>
+    <button id="clearSelectionBtn">Limpiar</button>
+    <button id="hideSelectedBtn" class="primary">Ocultar</button>
+  </div>
+
   <div class="container-list" id="container-list">
     <div class="empty-state">Loading...</div>
   </div>
@@ -168,20 +427,38 @@
     <span id="last-updated"></span>
   </div>
 
+  <div class="modal" id="logsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Container Logs</h2>
+        <button class="modal-close" id="logsModalClose">×</button>
+      </div>
+      <div class="logs-content" id="logsContent">Loading...</div>
+    </div>
+  </div>
+
   <script>
-    const { ipcRenderer } = window.electronAPI;
-    
     let containers = [];
+    let hiddenContainers = [];
+    let selectedContainers = [];
     const searchInput = document.getElementById('search');
     const containerList = document.getElementById('container-list');
     const countEl = document.getElementById('count');
     const refreshBtn = document.getElementById('refresh');
     const lastUpdated = document.getElementById('last-updated');
+    const logsModal = document.getElementById('logsModal');
+    const logsContent = document.getElementById('logsContent');
+    const logsModalClose = document.getElementById('logsModalClose');
+    const selectionToolbar = document.getElementById('selectionToolbar');
+    const selectionCounter = document.getElementById('selectionCounter');
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+    const hideSelectedBtn = document.getElementById('hideSelectedBtn');
     
     async function loadContainers() {
       try {
         console.log('Loading containers...');
-        containers = await ipcRenderer.invoke('get-containers');
+        containers = await window.electronAPI.getContainers();
         console.log('Containers loaded:', containers);
       } catch (err) {
         console.error('Error loading containers:', err);
@@ -194,51 +471,195 @@
     
     function render() {
       const filter = searchInput.value.toLowerCase();
-      const filtered = containers.filter(c => 
-        c.name.toLowerCase().includes(filter)
+      const filtered = containers.filter(c =>
+        c.name.toLowerCase().includes(filter) && !hiddenContainers.includes(c.id)
       );
-      
+
       const running = filtered.filter(c => c.status === 'running').length;
       countEl.textContent = running;
-      
+
       if (filtered.length === 0) {
         containerList.innerHTML = '<div class="empty-state">No containers found</div>';
         return;
       }
-      
-      containerList.innerHTML = filtered.map(c => `
-        <div class="container-item" data-id="${c.id}">
-          <div class="container-name">
-            <span class="status-dot status-${c.status}"></span>
-            ${c.name}
+
+      containerList.innerHTML = filtered.map(c => {
+        const statusText = c.status === 'running' ? '⏸ Stop' : '▶ Start';
+        return `
+          <div class="container-item" data-id="${c.id}">
+            <div class="container-content">
+              <div class="container-info">
+                <div class="container-name">
+                  <span class="status-dot status-${c.status}"></span>
+                  <span class="name-text">${c.name}</span>
+                </div>
+                <div class="container-image">${c.image}</div>
+              </div>
+              <div class="container-menu">
+                <button class="menu-button" data-id="${c.id}" data-status="${c.status}">⋮</button>
+                <div class="menu-dropdown" data-id="${c.id}">
+                  <button class="menu-item" data-action="${c.status === 'running' ? 'stop' : 'start'}" data-id="${c.id}">
+                    ${statusText}
+                  </button>
+                  <button class="menu-item" data-action="logs" data-id="${c.id}">📋 Logs</button>
+                  <button class="menu-item" data-action="console" data-id="${c.id}">⌨️ Console</button>
+                  <button class="menu-item" data-action="hide" data-id="${c.id}">🚫 Hide</button>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="container-image">${c.image}</div>
-        </div>
-      `).join('');
-      
+        `;
+      }).join('');
+
       lastUpdated.textContent = `Updated: ${new Date().toLocaleTimeString()}`;
+      attachMenuListeners();
+      attachSelectionListeners();
+      updateSelectionUI();
     }
     
-    searchInput.addEventListener('input', render);
-    
-    refreshBtn.addEventListener('click', loadContainers);
-    
-    containerList.addEventListener('click', async (e) => {
-      const item = e.target.closest('.container-item');
-      if (item) {
+    async function loadHidden() {
+      hiddenContainers = await window.electronAPI.getHiddenContainers();
+    }
+
+    function toggleSelection(containerId) {
+      const index = selectedContainers.indexOf(containerId);
+      if (index > -1) {
+        selectedContainers.splice(index, 1);
+      } else {
+        selectedContainers.push(containerId);
+      }
+      updateSelectionUI();
+    }
+
+    function updateSelectionUI() {
+      const visibleContainers = document.querySelectorAll('.container-item[data-id]');
+
+      // Update selected classes on items
+      visibleContainers.forEach(item => {
         const id = item.dataset.id;
-        await ipcRenderer.invoke('toggle-container', id);
-        await loadContainers();
+        if (selectedContainers.includes(id)) {
+          item.classList.add('selected');
+        } else {
+          item.classList.remove('selected');
+        }
+      });
+
+      // Show/hide toolbar
+      if (selectedContainers.length > 0) {
+        selectionToolbar.classList.add('visible');
+        selectionCounter.textContent = selectedContainers.length;
+      } else {
+        selectionToolbar.classList.remove('visible');
+      }
+    }
+
+    function attachSelectionListeners() {
+      document.querySelectorAll('.container-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          // Don't toggle selection if clicking on menu button or dropdown
+          if (e.target.closest('.container-menu')) {
+            return;
+          }
+          const id = item.dataset.id;
+          if (id) {
+            toggleSelection(id);
+          }
+        });
+      });
+    }
+
+    function attachMenuListeners() {
+      document.querySelectorAll('.menu-button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const dropdown = btn.nextElementSibling;
+          document.querySelectorAll('.menu-dropdown.active').forEach(d => {
+            if (d !== dropdown) d.classList.remove('active');
+          });
+          dropdown.classList.toggle('active');
+        });
+      });
+
+      document.querySelectorAll('.menu-item').forEach(item => {
+        item.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const action = item.dataset.action;
+          const id = item.dataset.id;
+          const dropdown = item.parentElement;
+          dropdown.classList.remove('active');
+
+          if (action === 'stop' || action === 'start') {
+            await window.electronAPI.toggleContainer(id);
+            await loadContainers();
+          } else if (action === 'logs') {
+            logsContent.textContent = 'Loading logs...';
+            logsModal.classList.add('active');
+            const logs = await window.electronAPI.getContainerLogs(id);
+            logsContent.textContent = logs;
+          } else if (action === 'hide') {
+            await window.electronAPI.addToHidden(id);
+            await loadHidden();
+            render();
+          } else if (action === 'console') {
+            alert('Console feature coming soon!');
+          }
+        });
+      });
+    }
+
+    logsModalClose.addEventListener('click', () => {
+      logsModal.classList.remove('active');
+    });
+
+    logsModal.addEventListener('click', (e) => {
+      if (e.target === logsModal) {
+        logsModal.classList.remove('active');
       }
     });
-    
+
+    searchInput.addEventListener('input', render);
+
+    refreshBtn.addEventListener('click', loadContainers);
+
+    selectAllBtn.addEventListener('click', () => {
+      const visibleContainers = document.querySelectorAll('.container-item[data-id]');
+      visibleContainers.forEach(item => {
+        const id = item.dataset.id;
+        if (!selectedContainers.includes(id)) {
+          selectedContainers.push(id);
+        }
+      });
+      updateSelectionUI();
+    });
+
+    clearSelectionBtn.addEventListener('click', () => {
+      selectedContainers = [];
+      updateSelectionUI();
+    });
+
+    hideSelectedBtn.addEventListener('click', async () => {
+      // Hide all selected containers
+      for (const id of selectedContainers) {
+        await window.electronAPI.addToHidden(id);
+      }
+      await loadHidden();
+      selectedContainers = [];
+      searchInput.value = '';
+      render();
+    });
+
     window.electronAPI.onContainersUpdated((newContainers) => {
       containers = newContainers;
       render();
     });
-    
-    loadContainers();
-    setInterval(loadContainers, 10000);
+
+    async function init() {
+      await loadHidden();
+      await loadContainers();
+      setInterval(loadContainers, 10000);
+    }
+
+    init();
   </script>
 </body>
 </html>
